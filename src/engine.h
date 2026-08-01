@@ -1,15 +1,15 @@
 /*
- * engine.h - `htg run` game execution engine (spec section 4).
+ * engine.h - `htg run` game execution engine (spec sections 3-6).
  *
- * This stage covers exploration and the event/dialogue system:
+ * Covers exploration, the event/dialogue system, and now battle/save:
  *   - Room description, exits (incl. flag-locked exits), item pickup.
  *   - on_enter_event playback, auto/choice event chaining.
  *   - Condition evaluation for event lines: flag:x==bool / var:x op N,
  *     combined with && / || (left-to-right, no parentheses) per spec 2.5.
  *   - Choice actions: set_flag / set_var / join_party / goto.
- *
- * Turn-based battle (spec section 3) is a later stage; encounters and the
- * "戦う" hooks are surfaced but resolved as a placeholder here.
+ *   - Turn-based battle on encounters (battle.c, spec section 3), with
+ *     equipment-adjusted effective stats and game-over on party wipe.
+ *   - Equipping items and save/load of the run state (save.c, spec section 6).
  */
 #ifndef HTG_ENGINE_H
 #define HTG_ENGINE_H
