@@ -135,6 +135,37 @@ JsonValue *json_object_get(const JsonValue *obj, const char *key) {
     return NULL;
 }
 
+int json_object_remove(JsonValue *obj, const char *key) {
+    if (!obj || obj->type != JSON_OBJECT || !key) return -1;
+    JsonMember *prev = NULL;
+    for (JsonMember *m = obj->as.object.head; m; prev = m, m = m->next) {
+        if (strcmp(m->key, key) == 0) {
+            if (prev) prev->next = m->next;
+            else obj->as.object.head = m->next;
+            if (obj->as.object.tail == m) obj->as.object.tail = prev;
+            free(m->key);
+            json_free(m->value);
+            free(m);
+            obj->as.object.count--;
+            return 0;
+        }
+    }
+    return -1;
+}
+
+const char *json_object_key_at(const JsonValue *obj, size_t index) {
+    if (!obj || obj->type != JSON_OBJECT) return NULL;
+    size_t i = 0;
+    for (JsonMember *m = obj->as.object.head; m; m = m->next, i++)
+        if (i == index) return m->key;
+    return NULL;
+}
+
+size_t json_object_size(const JsonValue *obj) {
+    if (!obj || obj->type != JSON_OBJECT) return 0;
+    return obj->as.object.count;
+}
+
 JsonValue *json_array_get(const JsonValue *arr, size_t index) {
     if (!arr || arr->type != JSON_ARRAY || index >= arr->as.array.count)
         return NULL;

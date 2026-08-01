@@ -107,6 +107,23 @@ int json_object_set(JsonValue *obj, const char *key, JsonValue *value);
 /* Object member lookup by key; returns NULL if absent or not an object. */
 JsonValue *json_object_get(const JsonValue *obj, const char *key);
 
+/*
+ * Remove object[key], freeing the stored value. Returns 0 if a member was
+ * removed, non-zero if the key was absent or obj is not an object. Preserves
+ * the insertion order of the remaining members.
+ */
+int json_object_remove(JsonValue *obj, const char *key);
+
+/*
+ * Return the key of the object member at position `index` (0-based, in
+ * insertion order), or NULL if out of range / not an object. The returned
+ * pointer is owned by the object; do not free it.
+ */
+const char *json_object_key_at(const JsonValue *obj, size_t index);
+
+/* Number of members in an object (0 if not an object). */
+size_t json_object_size(const JsonValue *obj);
+
 /* Array element by index; returns NULL if out of range or not an array. */
 JsonValue *json_array_get(const JsonValue *arr, size_t index);
 size_t json_array_size(const JsonValue *arr);

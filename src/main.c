@@ -1,21 +1,18 @@
 /*
  * main.c - HyperTxPG (htg) CLI entry point and command dispatch (spec sec. 1).
  *
- * Implemented in this stage (spec sections 1-2):
+ * Implemented:
  *   htg version        - print version
  *   htg help           - print usage
  *   htg new <name>     - create a new <name>.htgp skeleton project
+ *   htg edit <f>       - interactive editor (spec sections 3-5, editor.c)
+ *   htg run  <f.htgp>  - exploration/event engine (spec section 4, engine.c)
  *
- * The remaining commands are dispatched here but their full behaviour is
- * intentionally deferred to later spec sections:
- *   htg edit <f>       - interactive editor        (spec section 3+/4)
- *   htg run  <f>       - game engine               (spec section 4)
- *   htg compile <f>    - .htgp -> .htgb            (spec section 7 step 7)
- *
- * These stubs still perform the section 1 responsibility of *dispatch*:
- * argument checking, extension-based file-type detection for `run`, and
- * loading/validating the project via the section 2 data model where it makes
- * sense, then reporting that the feature is not yet available.
+ * Deferred to later spec sections:
+ *   htg run  <f.htgb>  - .htgb decode + play   (spec section 7 step 7)
+ *   htg compile <f>    - .htgp -> .htgb         (spec section 7 step 7)
+ * Turn-based battle (spec section 3) is surfaced by the engine as an
+ * encounter notice but resolved in a later stage.
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +20,8 @@
 
 #include "json.h"
 #include "model.h"
+#include "editor.h"
+#include "engine.h"
 
 #define HTG_VERSION "0.1.0"
 
@@ -118,9 +117,7 @@ static int cmd_new(int argc, char **argv) {
 }
 
 /*
- * `htg edit <project.htgp>` - dispatch stub.
- * Loads the project through the data model to prove it is valid, then reports
- * that the interactive editor arrives in a later section.
+ * `htg edit <project.htgp>` - launch the interactive editor (spec sec. 3-5).
  */
 static int cmd_edit(int argc, char **argv) {
     if (argc < 3) {
@@ -133,19 +130,7 @@ static int cmd_edit(int argc, char **argv) {
         fprintf(stderr, "エラー: edit は .htgp ファイルのみ対応しています。\n");
         return 1;
     }
-    const char *err = NULL;
-    HtgProject *p = htg_project_load(path, &err);
-    if (!p) {
-        fprintf(stderr, "エラー: '%s' の読み込みに失敗しました: %s\n",
-                path, err ? err : "不明なエラー");
-        return 1;
-    }
-    printf("読み込み成功: \"%s\" (rooms:%zu items:%zu actors:%zu skills:%zu events:%zu)\n",
-           p->meta.title, p->room_count, p->item_count,
-           p->actor_count, p->skill_count, p->event_count);
-    printf("(エディタ機能は次の実装段階で提供されます)\n");
-    htg_project_free(p);
-    return 0;
+    return htg_editor_run(path);
 }
 
 /*
@@ -169,11 +154,9 @@ static int cmd_run(int argc, char **argv) {
                     path, err ? err : "不明なエラー");
             return 1;
         }
-        printf("読み込み成功: \"%s\" / 開始部屋: %s\n",
-               p->meta.title, p->meta.start_room);
-        printf("(実行エンジンは次の実装段階で提供されます)\n");
+        int rc = htg_engine_run(p);
         htg_project_free(p);
-        return 0;
+        return rc;
     } else if (has_ext(path, ".htgb")) {
         printf("(.htgb の読み込み/実行は次の実装段階で提供されます)\n");
         return 0;
