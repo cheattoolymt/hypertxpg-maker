@@ -84,9 +84,16 @@ htg help                        # ヘルプ表示
     プロジェクトとは別の人間可読なJSONファイルへ保存/復元(仕様セクション6)
   - `htg run` のコマンドメニューから「セーブ」「ロード」を実行
 
-### 未実装(セクション7 ステップ7)
+### 実装済み(セクション7 ステップ7:`.htgb` コンパイル)
 
-- `.htgb` コンパイル(XOR難読化)・`.htgb` の実行
+- **`.htgb` コンパイル / 実行**(`src/compile.c`, `src/compile.h`)
+  - `htg compile <project.htgp> [出力.htgb]` で `.htgp` を `.htgb` へ変換
+  - `.htgp` と同一のデータ構造(JSON バイト列)を保持したまま、
+    リピートキー XOR による簡易難読化を施す(鍵はビルド定数)
+  - 先頭 5 バイトのヘッダ(マジック `HTGB` + フォーマットバージョン)+
+    難読化ペイロードの単純な形式
+  - `htg run <project.htgb>` は拡張子で自動判別し、復号 → JSON パース →
+    `.htgp` と同一のゲームエンジンで実行(仕様セクション1)
 
 ## ソース構成
 
@@ -99,6 +106,7 @@ src/engine.c  src/engine.h  ゲーム実行エンジン(探索・イベント・
 src/runtime.c src/runtime.h 共有ランタイム状態(パーティ・実効ステータス計算)
 src/battle.c  src/battle.h  ターン制戦闘システム(仕様セクション3)
 src/save.c    src/save.h    セーブ/ロード(仕様セクション6)
+src/compile.c src/compile.h .htgp -> .htgb コンパイル/難読化・.htgb 実行(仕様セクション7)
 src/main.c                  CLIエントリポイント/コマンドディスパッチ
 Makefile
 ```
