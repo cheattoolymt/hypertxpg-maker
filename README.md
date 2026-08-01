@@ -23,6 +23,28 @@ htg version                     # バージョン表示
 htg help                        # ヘルプ表示
 ```
 
+## サンプルゲーム
+
+`samples/kiri_no_mori.htgp` に、日本語のサンプル作品「霧の森の少女」を同梱しています。
+本格的なノベル調の導入・会話・戦闘を一通り体験できます。
+
+- **ノベルパート**: 開始部屋の `on_enter_event` から `auto` イベントを `next_event`
+  で連鎖させ、記憶を失った旅人のプロローグが自動再生されます。
+- **会話・分岐**: 泉のほとりで少女リラと出会い、選択肢によって仲間加入
+  (`join_party`)・伝説を聞く・単独行を選ぶといった分岐が発生します
+  (フラグ `set_flag` / 変数 `set_var` / 表示条件 `condition` を使用)。
+- **鍵付き扉**: リラから受け取る「祠の鍵」で `locked_by_flag` の扉が開きます。
+- **戦闘**: 道中でスライム・霧狼とのランダムエンカウント、最奥の祠では
+  必中エンカウント(`chance: 100`)のボス「闇の主」とのターン制戦闘。
+  プレイヤーと仲間はスキル(魔法/物理)・装備ボーナスを持ちます。
+
+```sh
+make
+./htg run samples/kiri_no_mori.htgp      # そのまま実行
+./htg compile samples/kiri_no_mori.htgp  # samples/kiri_no_mori.htgb を生成
+./htg run samples/kiri_no_mori.htgb      # 難読化版を実行
+```
+
 ## 実装状況
 
 仕様書(`htg_spec.md`)の推奨実装順序に沿って段階的に実装しています。
