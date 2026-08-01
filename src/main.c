@@ -7,12 +7,8 @@
  *   htg new <name>     - create a new <name>.htgp skeleton project
  *   htg edit <f>       - interactive editor (spec sections 3-5, editor.c)
  *   htg run  <f.htgp>  - exploration/event engine (spec section 4, engine.c)
- *
- * Deferred to later spec sections:
- *   htg run  <f.htgb>  - .htgb decode + play   (spec section 7 step 7)
- *   htg compile <f>    - .htgp -> .htgb         (spec section 7 step 7)
- * Turn-based battle (spec section 3) is surfaced by the engine as an
- * encounter notice but resolved in a later stage.
+ *   htg run  <f.htgb>  - .htgb decode + play   (spec section 7 step 7, compile.c)
+ *   htg compile <f>    - .htgp -> .htgb         (spec section 7 step 7, compile.c)
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -22,6 +18,7 @@
 #include "model.h"
 #include "editor.h"
 #include "engine.h"
+#include "compile.h"
 
 #define HTG_VERSION "0.1.0"
 
@@ -158,8 +155,16 @@ static int cmd_run(int argc, char **argv) {
         htg_project_free(p);
         return rc;
     } else if (has_ext(path, ".htgb")) {
-        printf("(.htgb の読み込み/実行は次の実装段階で提供されます)\n");
-        return 0;
+        const char *err = NULL;
+        HtgProject *p = htg_project_load_htgb(path, &err);
+        if (!p) {
+            fprintf(stderr, "エラー: '%s' の読み込みに失敗しました: %s\n",
+                    path, err ? err : "不明なエラー");
+            return 1;
+        }
+        int rc = htg_engine_run(p);
+        htg_project_free(p);
+        return rc;
     }
 
     fprintf(stderr, "エラー: 拡張子が不明です(.htgp か .htgb を指定してください)。\n");
@@ -167,14 +172,14 @@ static int cmd_run(int argc, char **argv) {
 }
 
 /*
- * `htg compile <project.htgp>` - dispatch stub.
- * Validates the input via the model; actual .htgb serialization is a later
- * section (spec section 7, step 7).
+ * `htg compile <project.htgp> [out.htgb]`
+ * Compiles a .htgp into an obfuscated .htgb (spec section 1 / section 7 step 7).
+ * The output path defaults to the input with its extension changed to .htgb.
  */
 static int cmd_compile(int argc, char **argv) {
     if (argc < 3) {
         fprintf(stderr, "エラー: プロジェクトファイルを指定してください。\n");
-        fprintf(stderr, "使い方: htg compile <project.htgp>\n");
+        fprintf(stderr, "使い方: htg compile <project.htgp> [出力.htgb]\n");
         return 2;
     }
     const char *path = argv[2];
@@ -182,16 +187,33 @@ static int cmd_compile(int argc, char **argv) {
         fprintf(stderr, "エラー: compile は .htgp ファイルのみ対応しています。\n");
         return 1;
     }
+    const char *out = (argc >= 4) ? argv[3] : NULL;
+    if (out && !has_ext(out, ".htgb")) {
+        fprintf(stderr, "エラー: 出力ファイルは .htgb 拡張子で指定してください。\n");
+        return 1;
+    }
+
     const char *err = NULL;
-    HtgProject *p = htg_project_load(path, &err);
-    if (!p) {
-        fprintf(stderr, "エラー: '%s' の読み込みに失敗しました: %s\n",
+    if (htg_compile_file(path, out, &err) != 0) {
+        fprintf(stderr, "エラー: '%s' のコンパイルに失敗しました: %s\n",
                 path, err ? err : "不明なエラー");
         return 1;
     }
-    printf("入力の検証に成功しました: \"%s\"\n", p->meta.title);
-    printf("(.htgb へのコンパイルは次の実装段階で提供されます)\n");
-    htg_project_free(p);
+
+    /* Re-derive the effective output path just for the success message. */
+    char shown[1024];
+    if (out) {
+        snprintf(shown, sizeof(shown), "%s", out);
+    } else {
+        snprintf(shown, sizeof(shown), "%s", path);
+        char *dot = strstr(shown, ".htgp");
+        if (dot) memcpy(dot, ".htgb", 5);
+        else {
+            size_t l = strlen(shown);
+            if (l + 6 < sizeof(shown)) memcpy(shown + l, ".htgb", 6);
+        }
+    }
+    printf("→ '%s' にコンパイルしました\n", shown);
     return 0;
 }
 

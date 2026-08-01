@@ -1,0 +1,360 @@
+{
+  "meta": {
+    "title": "霧の森の少女",
+    "version": "1.0",
+    "start_room": "room_awake",
+    "player_default_actor": "player_default",
+    "max_party_size": 3
+  },
+  "flags": {
+    "met_lila": false,
+    "lila_joined": false,
+    "has_bridge_key": false,
+    "boss_defeated": false,
+    "heard_legend": false
+  },
+  "vars": {
+    "gold": 0,
+    "courage": 0
+  },
+  "rooms": {
+    "room_awake": {
+      "name": "目覚めの空き地",
+      "description": "苔むした岩に囲まれた、こぢんまりとした空き地。頭上を霧が流れていく。",
+      "exits": {
+        "north": "room_forest_path"
+      },
+      "items": ["item_rusty_sword"],
+      "on_enter_event": "event_prologue_1"
+    },
+    "room_forest_path": {
+      "name": "霧の小道",
+      "description": "ねじれた木々のあいだを縫うように、細い小道が北へ続いている。時折、茂みが揺れる。",
+      "exits": {
+        "south": "room_awake",
+        "north": "room_spring"
+      },
+      "items": [],
+      "encounter": { "chance": 45, "actor": "slime" }
+    },
+    "room_spring": {
+      "name": "泉のほとり",
+      "description": "澄んだ泉が静かに湧いている。ほとりに、フードをかぶった少女が座っていた。",
+      "exits": {
+        "west": "room_forest_path",
+        "north": { "to": "room_bridge", "locked_by_flag": "has_bridge_key" }
+      },
+      "items": ["item_potion", "item_leather_armor"],
+      "on_enter_event": "event_meet_lila"
+    },
+    "room_bridge": {
+      "name": "朽ちた吊り橋",
+      "description": "谷にかかる古い吊り橋。板は軋み、下からは冷たい風が吹き上げてくる。渡った先に祠が見える。",
+      "exits": {
+        "south": "room_spring",
+        "north": "room_shrine"
+      },
+      "items": ["item_ether", "item_bridge_key"],
+      "encounter": { "chance": 55, "actor": "wolf" }
+    },
+    "room_shrine": {
+      "name": "森の祠",
+      "description": "苔と蔦に覆われた古い祠。その前に、真っ黒な靄をまとう巨大な影が立ちはだかっている。",
+      "exits": {
+        "south": "room_bridge"
+      },
+      "items": [],
+      "on_enter_event": "event_boss_intro",
+      "encounter": { "chance": 100, "actor": "shadow_lord" }
+    }
+  },
+  "items": {
+    "item_rusty_sword": {
+      "name": "錆びた剣",
+      "description": "刃こぼれしているが、まだ戦えそうだ。",
+      "usable": false,
+      "equip": {
+        "slot": "weapon",
+        "atk_bonus": 4, "def_bonus": 0, "spd_bonus": 0, "hp_bonus": 0, "mp_bonus": 0
+      }
+    },
+    "item_leather_armor": {
+      "name": "革の鎧",
+      "description": "軽くて動きやすい革の鎧。",
+      "usable": false,
+      "equip": {
+        "slot": "armor",
+        "atk_bonus": 0, "def_bonus": 4, "spd_bonus": 0, "hp_bonus": 10, "mp_bonus": 0
+      }
+    },
+    "item_potion": {
+      "name": "回復薬",
+      "description": "HPを40回復する。",
+      "usable": true,
+      "consumable": true,
+      "effect": { "type": "heal_hp", "amount": 40 }
+    },
+    "item_ether": {
+      "name": "魔力の雫",
+      "description": "MPを20回復する。",
+      "usable": true,
+      "consumable": true,
+      "effect": { "type": "heal_mp", "amount": 20 }
+    },
+    "item_bridge_key": {
+      "name": "祠の鍵",
+      "description": "吊り橋の向こうの祠へ通じるという、古びた鍵。",
+      "usable": false,
+      "consumable": false
+    },
+    "item_slime_gel": {
+      "name": "スライムゼリー",
+      "description": "ひんやりとした半透明のゼリー。",
+      "usable": false
+    },
+    "item_wolf_fang": {
+      "name": "狼の牙",
+      "description": "鋭く尖った牙。素材になる。",
+      "usable": false
+    },
+    "item_shadow_core": {
+      "name": "影の核",
+      "description": "闇の主が残した、脈打つ黒い核。",
+      "usable": false
+    }
+  },
+  "actors": {
+    "player_default": {
+      "name": "旅人",
+      "hp": 90, "mp": 24, "atk": 10, "def": 5, "spd": 7,
+      "skills": ["attack", "fireball", "heal"],
+      "is_enemy": false,
+      "equipment": { "weapon": null, "armor": null, "accessory": null }
+    },
+    "lila": {
+      "name": "リラ",
+      "hp": 70, "mp": 40, "atk": 7, "def": 4, "spd": 9,
+      "skills": ["attack", "ice_lance", "heal"],
+      "is_enemy": false,
+      "recruitable": true,
+      "equipment": { "weapon": null, "armor": null, "accessory": null }
+    },
+    "slime": {
+      "name": "森のスライム",
+      "hp": 26, "mp": 0, "atk": 6, "def": 1, "spd": 4,
+      "skills": ["attack"],
+      "drop": ["item_slime_gel"],
+      "is_enemy": true
+    },
+    "wolf": {
+      "name": "霧狼",
+      "hp": 48, "mp": 6, "atk": 11, "def": 3, "spd": 12,
+      "skills": ["attack", "bite"],
+      "drop": ["item_wolf_fang"],
+      "is_enemy": true
+    },
+    "shadow_lord": {
+      "name": "闇の主",
+      "hp": 140, "mp": 30, "atk": 16, "def": 6, "spd": 8,
+      "skills": ["attack", "dark_wave"],
+      "drop": ["item_shadow_core"],
+      "is_enemy": true
+    }
+  },
+  "skills": {
+    "attack": {
+      "name": "攻撃",
+      "type": "physical",
+      "power": 0,
+      "mp_cost": 0,
+      "accuracy": 100
+    },
+    "bite": {
+      "name": "かみつき",
+      "type": "physical",
+      "power": 12,
+      "mp_cost": 0,
+      "accuracy": 90
+    },
+    "fireball": {
+      "name": "ファイアボール",
+      "type": "magic",
+      "power": 22,
+      "mp_cost": 8,
+      "accuracy": 90,
+      "element": "fire"
+    },
+    "ice_lance": {
+      "name": "アイスランス",
+      "type": "magic",
+      "power": 20,
+      "mp_cost": 7,
+      "accuracy": 92,
+      "element": "ice"
+    },
+    "heal": {
+      "name": "ヒール",
+      "type": "magic",
+      "power": 30,
+      "mp_cost": 6,
+      "accuracy": 100,
+      "element": "holy"
+    },
+    "dark_wave": {
+      "name": "闇の波動",
+      "type": "magic",
+      "power": 28,
+      "mp_cost": 10,
+      "accuracy": 85,
+      "element": "dark"
+    }
+  },
+  "events": {
+    "event_prologue_1": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "", "text": "……気づけば、見知らぬ森の中にいた。" },
+        { "speaker": "", "text": "冷たい霧が肌を撫で、記憶はぼんやりと霞んでいる。" },
+        { "speaker": "", "text": "自分が誰なのか、なぜここにいるのか——何ひとつ思い出せない。" }
+      ],
+      "choices": [],
+      "next_event": "event_prologue_2"
+    },
+    "event_prologue_2": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "謎の声", "text": "……ようやく、目を覚ましたのね。" },
+        { "speaker": "謎の声", "text": "この森には、古い呪いが眠っている。北の祠にすべての答えがあるわ。" },
+        { "speaker": "", "text": "声はそれきり、霧に溶けて消えた。足元に、錆びた剣が落ちている。" }
+      ],
+      "choices": [],
+      "next_event": "event_prologue_3"
+    },
+    "event_prologue_3": {
+      "type": "choice",
+      "lines": [
+        { "speaker": "", "text": "北へ進むしかなさそうだ。覚悟は決まったか？" }
+      ],
+      "choices": [
+        { "text": "「行こう。答えを見つけるんだ」", "goto": null, "set_var": "courage+=2" },
+        { "text": "「……少し、深呼吸してからにする」", "goto": null, "set_var": "courage+=1" }
+      ]
+    },
+    "event_meet_lila": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "少女", "text": "……あなたも、呪いに呼ばれてここへ？", "condition": "flag:met_lila==false" },
+        { "speaker": "旅人", "text": "呪い……？ 記憶がないんだ。北の祠に答えがあると、声が言っていた。", "condition": "flag:met_lila==false" },
+        { "speaker": "少女", "text": "わたしはリラ。祠の封印を解く鍵を持っているの。", "condition": "flag:met_lila==false" },
+        { "speaker": "リラ", "text": "……また来たのね、旅人。", "condition": "flag:met_lila==true" }
+      ],
+      "choices": [],
+      "next_event": "event_lila_talk"
+    },
+    "event_lila_talk": {
+      "type": "choice",
+      "lines": [
+        { "speaker": "リラ", "text": "闇の主は強い。ひとりでは、きっと敵わない。" },
+        { "speaker": "リラ", "text": "——わたしを、連れて行ってくれる？" }
+      ],
+      "choices": [
+        {
+          "text": "「ああ、一緒に来てくれ」",
+          "goto": "event_lila_join",
+          "set_flag": "met_lila"
+        },
+        {
+          "text": "祠の伝説について尋ねる",
+          "goto": "event_legend",
+          "set_flag": "met_lila"
+        },
+        {
+          "text": "「いや、ひとりで大丈夫だ」",
+          "goto": "event_lila_solo",
+          "set_flag": "met_lila"
+        }
+      ]
+    },
+    "event_legend": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "リラ", "text": "むかし、この森を守る精霊がいた。人の欲がそれを穢し、闇の主が生まれたの。" },
+        { "speaker": "リラ", "text": "祠の封印を解き、核を砕けば——森は元に戻るはずよ。" },
+        { "speaker": "", "text": "リラの瞳には、静かな覚悟が宿っていた。" }
+      ],
+      "choices": [],
+      "next_event": "event_lila_join_prompt"
+    },
+    "event_lila_join_prompt": {
+      "type": "choice",
+      "lines": [
+        { "speaker": "リラ", "text": "話は済んだわ。……で、わたしを連れて行ってくれる？" }
+      ],
+      "choices": [
+        { "text": "「ああ、頼りにしている」", "goto": "event_lila_join", "set_flag": "heard_legend" },
+        { "text": "「やはり、ひとりで行く」", "goto": "event_lila_solo" }
+      ]
+    },
+    "event_lila_join": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "リラ", "text": "ありがとう。……足手まといには、ならないから。" },
+        { "speaker": "", "text": "リラが仲間に加わった! 彼女は祠の鍵を差し出した。" }
+      ],
+      "choices": [],
+      "next_event": "event_lila_join_apply"
+    },
+    "event_lila_join_apply": {
+      "type": "choice",
+      "lines": [
+        { "speaker": "リラ", "text": "この鍵で、北の吊り橋の先へ進めるわ。" }
+      ],
+      "choices": [
+        {
+          "text": "リラを仲間にする",
+          "goto": "event_lila_receive_key",
+          "join_party": "lila",
+          "set_flag": "lila_joined"
+        }
+      ]
+    },
+    "event_lila_receive_key": {
+      "type": "choice",
+      "lines": [
+        { "speaker": "", "text": "リラから祠の鍵を受け取った。" }
+      ],
+      "choices": [
+        { "text": "鍵をしまう", "goto": null, "set_flag": "has_bridge_key" }
+      ]
+    },
+    "event_lila_solo": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "リラ", "text": "……そう。無茶だけは、しないで。" },
+        { "speaker": "", "text": "リラは鍵をそっと地面に置き、霧の中へ消えていった。" }
+      ],
+      "choices": [],
+      "next_event": "event_lila_solo_key"
+    },
+    "event_lila_solo_key": {
+      "type": "choice",
+      "lines": [
+        { "speaker": "", "text": "足元に、祠の鍵が残されている。" }
+      ],
+      "choices": [
+        { "text": "鍵を拾う", "goto": null, "set_flag": "has_bridge_key" }
+      ]
+    },
+    "event_boss_intro": {
+      "type": "auto",
+      "lines": [
+        { "speaker": "闇の主", "text": "ここまで来たか、記憶なき者よ……。" },
+        { "speaker": "闇の主", "text": "この森の絶望、その身に刻んでやろう。" },
+        { "speaker": "リラ", "text": "来るわよ! 気を抜かないで!", "condition": "flag:lila_joined==true" },
+        { "speaker": "", "text": "闇の主が、漆黒の靄を噴き上げた——!" }
+      ],
+      "choices": [],
+      "next_event": null
+    }
+  }
+}

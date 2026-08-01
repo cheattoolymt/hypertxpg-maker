@@ -23,6 +23,28 @@ htg version                     # バージョン表示
 htg help                        # ヘルプ表示
 ```
 
+## サンプルゲーム
+
+`samples/kiri_no_mori.htgp` に、日本語のサンプル作品「霧の森の少女」を同梱しています。
+本格的なノベル調の導入・会話・戦闘を一通り体験できます。
+
+- **ノベルパート**: 開始部屋の `on_enter_event` から `auto` イベントを `next_event`
+  で連鎖させ、記憶を失った旅人のプロローグが自動再生されます。
+- **会話・分岐**: 泉のほとりで少女リラと出会い、選択肢によって仲間加入
+  (`join_party`)・伝説を聞く・単独行を選ぶといった分岐が発生します
+  (フラグ `set_flag` / 変数 `set_var` / 表示条件 `condition` を使用)。
+- **鍵付き扉**: リラから受け取る「祠の鍵」で `locked_by_flag` の扉が開きます。
+- **戦闘**: 道中でスライム・霧狼とのランダムエンカウント、最奥の祠では
+  必中エンカウント(`chance: 100`)のボス「闇の主」とのターン制戦闘。
+  プレイヤーと仲間はスキル(魔法/物理)・装備ボーナスを持ちます。
+
+```sh
+make
+./htg run samples/kiri_no_mori.htgp      # そのまま実行
+./htg compile samples/kiri_no_mori.htgp  # samples/kiri_no_mori.htgb を生成
+./htg run samples/kiri_no_mori.htgb      # 難読化版を実行
+```
+
 ## 実装状況
 
 仕様書(`htg_spec.md`)の推奨実装順序に沿って段階的に実装しています。
@@ -84,9 +106,16 @@ htg help                        # ヘルプ表示
     プロジェクトとは別の人間可読なJSONファイルへ保存/復元(仕様セクション6)
   - `htg run` のコマンドメニューから「セーブ」「ロード」を実行
 
-### 未実装(セクション7 ステップ7)
+### 実装済み(セクション7 ステップ7:`.htgb` コンパイル)
 
-- `.htgb` コンパイル(XOR難読化)・`.htgb` の実行
+- **`.htgb` コンパイル / 実行**(`src/compile.c`, `src/compile.h`)
+  - `htg compile <project.htgp> [出力.htgb]` で `.htgp` を `.htgb` へ変換
+  - `.htgp` と同一のデータ構造(JSON バイト列)を保持したまま、
+    リピートキー XOR による簡易難読化を施す(鍵はビルド定数)
+  - 先頭 5 バイトのヘッダ(マジック `HTGB` + フォーマットバージョン)+
+    難読化ペイロードの単純な形式
+  - `htg run <project.htgb>` は拡張子で自動判別し、復号 → JSON パース →
+    `.htgp` と同一のゲームエンジンで実行(仕様セクション1)
 
 ## ソース構成
 
@@ -99,6 +128,7 @@ src/engine.c  src/engine.h  ゲーム実行エンジン(探索・イベント・
 src/runtime.c src/runtime.h 共有ランタイム状態(パーティ・実効ステータス計算)
 src/battle.c  src/battle.h  ターン制戦闘システム(仕様セクション3)
 src/save.c    src/save.h    セーブ/ロード(仕様セクション6)
+src/compile.c src/compile.h .htgp -> .htgb コンパイル/難読化・.htgb 実行(仕様セクション7)
 src/main.c                  CLIエントリポイント/コマンドディスパッチ
 Makefile
 ```
